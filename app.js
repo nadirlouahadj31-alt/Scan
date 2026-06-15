@@ -211,6 +211,34 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+
+/* ── Image upload scan ────────────────────────────── */
+const imgUpload = document.getElementById('img-upload');
+
+imgUpload.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const bitmap = await createImageBitmap(file);
+
+  // Draw onto canvas and decode
+  canvas.width  = bitmap.width;
+  canvas.height = bitmap.height;
+  ctx.drawImage(bitmap, 0, 0);
+
+  const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+
+  if (code) {
+    onScan(code.data.trim());
+  } else {
+    showResult('⚠ No QR code found in image', 'error');
+  }
+
+  // Reset input so the same file can be re-selected
+  imgUpload.value = '';
+});
+
 /* ── Boot ─────────────────────────────────────────── */
 initCameras();
 setMode('entry');
